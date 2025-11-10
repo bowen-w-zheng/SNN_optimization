@@ -1,0 +1,90 @@
+# Default configuration for Classical Balanced Network (CBN)
+
+network:
+  type: "CBN"
+  n_e: 4500  # Number of excitatory neurons (~4:1 ratio)
+  n_i: 1125  # Number of inhibitory neurons
+  n_ff: 1000  # Number of feedforward inputs
+
+  # Connection probabilities
+  p_ee: 0.2
+  p_ei: 0.5
+  p_ie: 0.5
+  p_ii: 0.5
+  p_fe: 0.5
+  p_fi: 0.5
+
+# Parameter ranges for optimization (paper ranges)
+param_ranges:
+  tau_ed: [1.0, 25.0]    # E synaptic decay (ms)
+  tau_id: [1.0, 25.0]    # I synaptic decay (ms)
+  J_ee: [0.0, 150.0]     # E->E strength (mV)
+  J_ei: [-150.0, 0.0]    # I->E strength (mV)
+  J_ie: [0.0, 150.0]     # E->I strength (mV)
+  J_ii: [-150.0, 0.0]    # I->I strength (mV)
+  J_eF: [0.0, 150.0]     # FF->E strength (mV)
+  J_iF: [0.0, 150.0]     # FF->I strength (mV)
+
+simulation:
+  dt: 0.05               # Time step (ms) - paper default
+  integrator: "euler"    # "euler", "heun", "rk4"
+
+  # Short run (feasibility check)
+  short_duration: 10000.0  # 10 seconds (ms)
+
+  # Full run
+  full_duration: 140500.0  # 140.5 seconds (ms)
+  burn_in: 500.0           # 0.5 seconds (ms)
+
+  # Feedforward
+  ff_rate: 10.0            # Poisson rate (sp/s)
+
+  # Binning
+  bin_size: 200.0          # Bin size (ms)
+
+stats:
+  n_sample: 50             # Neurons to sample (paper default)
+  n_repeats: 10            # Subsampling repeats
+  min_fr: 0.5              # Minimum firing rate (sp/s)
+  dsh_threshold: 0.95      # FA dimensionality threshold
+  n_eigenspectrum: 50      # Number of eigenvalues
+
+cost:
+  use_fr: true
+  use_ff: true
+  use_rsc: true
+  use_pct_sh: true
+  use_dsh: true
+  use_es: true
+
+  # Weights (all equal by default)
+  w_fr: 1.0
+  w_ff: 1.0
+  w_rsc: 1.0
+  w_pct_sh: 1.0
+  w_dsh: 1.0
+  w_es: 1.0
+
+bo:
+  n_init: 50               # LHS initial samples (paper default)
+  n_gp_restarts: 10        # GP hyperparameter optimization restarts
+  n_acq_restarts: 50       # Acquisition optimization restarts
+  batch_size: 1            # Candidates per iteration
+  max_iterations: 200
+  cost_threshold: 0.01     # Stop if cost below this
+
+  # Intensification (paper defaults)
+  max_reps: 5              # R repetitions
+  sd_threshold: 0.15       # Early stop threshold
+  potential_threshold: 1.0 # SD multiplier for "potentially optimal"
+
+  # Feasibility thresholds (paper screening criteria)
+  min_fr: 1.0              # Minimum population FR (sp/s)
+  max_ff: 5.0              # Maximum Fano factor
+  min_dsh: 1.0             # Minimum shared dimensionality
+
+  use_feasibility_gp: true
+
+  # Logging
+  log_dir: "./snops_logs"
+  save_every: 10           # Checkpoint frequency

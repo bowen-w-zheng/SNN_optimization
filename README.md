@@ -1,12 +1,35 @@
-SNOPS (Spiking Network Optimization using Population Statistics) 
+SNOPS (Spiking Network Optimization using Population Statistics)
 =================
 Code accompanying the manuscript
 
-“Automated customization of large-scale spiking network models to neuronal population activity”
+"Automated customization of large-scale spiking network models to neuronal population activity"
 by S. Wu, C. Huang, A. C. Synder, M. A. Smith*, B. Doiron*, B. M. Yu*.
 Nat Comput Sci, vol. 4, 2024, pp. 690-705. [[Link]](https://www.nature.com/articles/s43588-024-00688-3)
 
-SNOPS customizes the parameters of a spiking network model to reproduce the population-wide covariability of large-scale neuronal recordings. 
+SNOPS customizes the parameters of a spiking network model to reproduce the population-wide covariability of large-scale neuronal recordings.
+
+## 🆕 Python/JAX Implementation
+
+A new **high-performance GPU-accelerated Python/JAX implementation** is now available in `snops_jax/`!
+
+**Key improvements over MATLAB**:
+- ⚡ **GPU acceleration** with JAX for 10-100x faster simulations
+- 🔬 **Modern ODE solvers** (Euler, Heun, RK4, Diffrax)
+- 🎯 **Scalable Bayesian optimization** with batching and parallelization
+- 🐍 **Pure Python** - no MEX compilation needed
+- 📦 **Easy installation** via pip
+
+**Quick start**:
+```bash
+pip install -e .
+python examples/simple_simulation.py
+```
+
+See **[README_SNOPS_JAX.md](README_SNOPS_JAX.md)** for complete documentation.
+
+---
+
+## MATLAB Implementation (Original) 
 
 Getting Started
 -----------

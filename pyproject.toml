@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snops-jax"
+version = "0.1.0"
+description = "SNOPS: Spiking Network Optimization using Population Statistics (JAX implementation)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "SNOPS-JAX Contributors"}
+]
+keywords = ["neuroscience", "spiking-networks", "bayesian-optimization", "jax", "gpu"]
+
+dependencies = [
+    "jax>=0.4.20",
+    "jaxlib>=0.4.20",
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+    "pandas>=2.0.0",
+    "h5py>=3.9.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.65.0",
+    "equinox>=0.11.0",
+    "optax>=0.1.7",
+    "jaxopt>=0.8.0",
+    "chex>=0.1.8",
+    "diffrax>=0.4.0",
+    "tinygp>=0.3.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "mypy>=1.4.0",
+    "ruff>=0.0.280",
+]
+gpu = [
+    "jax[cuda12_pip]>=0.4.20",
+]
+mcp = [
+    "numpyro>=0.13.0",
+    "gpjax>=0.8.0",
+]
+
+[project.scripts]
+snops-jax = "snops_jax.cli.run_snops:main"
+snops-simulate = "snops_jax.cli.simulate_only:main"
+snops-stats = "snops_jax.cli.compute_stats:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["snops_jax*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["snops_jax/tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=snops_jax --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
