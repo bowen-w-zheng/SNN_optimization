@@ -151,18 +151,9 @@ def compute_statistics_summary(
     Returns:
         Dictionary with fr, ff, rsc, rsc_z
     """
-    # Move spike_counts to CPU to avoid GPU OOM during statistics computation
-    # Statistics computation is not performance-critical compared to simulation
-    try:
-        cpu_device = jax.devices('cpu')[0]
-        spike_counts_cpu = jax.device_put(spike_counts, cpu_device)
-    except:
-        # Fallback if CPU device not available
-        spike_counts_cpu = spike_counts
-
-    fr = compute_fr(spike_counts_cpu, bin_size)
-    ff = compute_ff(spike_counts_cpu, min_fr, bin_size)
-    rsc = compute_rsc(spike_counts_cpu, min_fr, bin_size)
+    fr = compute_fr(spike_counts, bin_size)
+    ff = compute_ff(spike_counts, min_fr, bin_size)
+    rsc = compute_rsc(spike_counts, min_fr, bin_size)
     rsc_z = fisher_z_transform(rsc)
 
     return {"fr": float(fr), "ff": float(ff), "rsc": float(rsc), "rsc_z": float(rsc_z)}
