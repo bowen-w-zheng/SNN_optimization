@@ -36,7 +36,7 @@ def main():
     # Simulation config (short for demo)
     sim_config = SimulationConfig(
         dt=0.05,
-        duration=10000.0,  # 10 seconds
+        duration=2000.0,  # 2 seconds (faster for demo)
         burn_in=500.0,
         bin_size=200.0,
         ff_rate=10.0,

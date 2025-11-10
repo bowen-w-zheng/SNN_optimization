@@ -105,7 +105,7 @@ def update_membrane_euler(
     V_next = jnp.where(spikes, params.V_re, V_next)
 
     # 5. Update refractory counter
-    ref_steps = int(jnp.ceil(params.tau_ref / dt))
+    ref_steps = jnp.ceil(params.tau_ref / dt).astype(jnp.int32)
     ref_next = jnp.where(
         spikes,
         ref_steps,  # Start refractory period
@@ -149,7 +149,7 @@ def update_membrane_heun(
     V_next = jnp.where(spikes, params.V_re, V_next)
 
     # Refractory counter
-    ref_steps = int(jnp.ceil(params.tau_ref / dt))
+    ref_steps = jnp.ceil(params.tau_ref / dt).astype(jnp.int32)
     ref_next = jnp.where(spikes, ref_steps, jnp.maximum(state.ref_count - 1, 0))
 
     return NeuronState(V=V_next, ref_count=ref_next, spikes=spikes)
@@ -193,7 +193,7 @@ def update_membrane_rk4(
     V_next = jnp.where(spikes, params.V_re, V_next)
 
     # Refractory counter
-    ref_steps = int(jnp.ceil(params.tau_ref / dt))
+    ref_steps = jnp.ceil(params.tau_ref / dt).astype(jnp.int32)
     ref_next = jnp.where(spikes, ref_steps, jnp.maximum(state.ref_count - 1, 0))
 
     return NeuronState(V=V_next, ref_count=ref_next, spikes=spikes)
