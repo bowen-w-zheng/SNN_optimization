@@ -16,31 +16,33 @@ from snops_jax.stats.fa_jax import compute_shared_variance_stats
 
 
 def main():
-    # Configuration
-    n_e = 800  # Small network for quick demo
-    n_i = 200
-    n_ff = 200
+    # Configuration - FIXED PARAMETERS
+    n_e = 800  # Excitatory neurons
+    n_i = 200  # Inhibitory neurons
+    n_ff = 1000  # More feedforward neurons for stronger drive
 
     # Model parameters
     eif_params = EIFParams()
-    syn_params = SynapticParams(tau_ed=5.0, tau_id=5.0)
+    syn_params = SynapticParams(tau_ed=5.0, tau_id=10.0)
 
+    # CORRECTED: Balanced network parameters
+    # These create asynchronous irregular activity (AI state)
     network_params = NetworkParams(
-        J_ee=20.0,
-        J_ei=-40.0,
-        J_ie=30.0,
-        J_ii=-30.0,
-        J_eF=25.0,
-        J_iF=25.0,
+        J_ee=2.0,      # Weak E->E (avoid runaway excitation)
+        J_ei=-50.0,    # Strong I->E (balance excitation)
+        J_ie=15.0,     # Moderate E->I
+        J_ii=-35.0,    # Moderate I->I
+        J_eF=8.0,      # Moderate feedforward drive
+        J_iF=8.0,
     )
 
-    # Simulation config (short for demo)
+    # Simulation config
     sim_config = SimulationConfig(
         dt=0.05,
-        duration=2000.0,  # 2 seconds (faster for demo)
+        duration=5000.0,  # 5 seconds for better statistics
         burn_in=500.0,
         bin_size=200.0,
-        ff_rate=10.0,
+        ff_rate=50.0,  # CRITICAL FIX: Higher FF rate for asynchronous activity
         integrator="euler",
     )
 
