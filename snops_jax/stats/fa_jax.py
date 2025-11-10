@@ -227,6 +227,15 @@ def compute_shared_variance_stats(
         - Psi: Noise covariance
         - n_factors: Number of factors used
     """
+    # Move spike_counts to CPU to avoid GPU OOM during FA computation
+    # FA is not performance-critical compared to simulation
+    try:
+        cpu_device = jax.devices('cpu')[0]
+        spike_counts = jax.device_put(spike_counts, cpu_device)
+    except:
+        # Fallback if CPU device not available
+        pass
+
     if rng_key is None:
         rng_key = jax.random.PRNGKey(0)
 
