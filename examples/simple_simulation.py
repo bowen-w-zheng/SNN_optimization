@@ -6,6 +6,7 @@ This demonstrates the core SNOPS-JAX functionality without running full optimiza
 
 import jax
 import jax.numpy as jnp
+import time
 from snops_jax.models.eif import EIFParams, initialize_neurons
 from snops_jax.models.synapses import SynapticParams
 from snops_jax.models.connectivity import build_cbn, NetworkParams
@@ -45,30 +46,38 @@ def main():
 
     # Initialize
     print("Building network connectivity...")
+    t0 = time.time()
     rng_key = jax.random.PRNGKey(42)
     key_conn, key_sim = jax.random.split(rng_key)
 
     conn = build_cbn(n_e, n_i, n_ff, network_params, rng_key=key_conn)
+    print(f"  ✓ Built in {time.time()-t0:.2f}s")
 
     # Run simulation
     print("Running simulation...")
+    t0 = time.time()
     output = run_simulation(
         n_e, n_i, n_ff, conn, sim_config, eif_params, syn_params, key_sim
     )
+    print(f"  ✓ Simulated in {time.time()-t0:.2f}s")
 
     # Compute statistics
     print("\n=== Statistics ===")
     spike_counts = output.spike_counts_e  # (n_e, n_bins)
 
     # Single/pairwise stats
+    t0 = time.time()
     stats = compute_statistics_summary(spike_counts, sim_config.bin_size)
     print(f"Firing rate: {stats['fr']:.2f} sp/s")
     print(f"Fano factor: {stats['ff']:.2f}")
     print(f"Spike count correlation: {stats['rsc']:.3f} (Fisher z: {stats['rsc_z']:.3f})")
+    print(f"  (computed in {time.time()-t0:.2f}s)")
 
     # Shared variance stats
     print("\nComputing Factor Analysis...")
+    t0 = time.time()
     fa_stats = compute_shared_variance_stats(spike_counts, rng_key=key_sim)
+    print(f"  ✓ FA computed in {time.time()-t0:.2f}s")
     print(f"Percent shared variance: {fa_stats['pct_sh']*100:.1f}%")
     print(f"Dimensionality: {fa_stats['dsh']}")
     print(f"Number of factors: {fa_stats['n_factors']}")
