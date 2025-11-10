@@ -4,6 +4,7 @@ Single-neuron and pairwise statistics.
 Implements fr (firing rate), ff (Fano factor), and rsc (spike count correlation).
 """
 
+import jax
 import jax.numpy as jnp
 import chex
 
@@ -94,15 +95,22 @@ def compute_rsc(
     if n_valid < 2:
         return 0.0
 
-    # Compute correlation matrix
-    corr_matrix = jnp.corrcoef(counts_valid)
+    # Fast correlation computation using efficient JAX operations
+    # Standardize (z-score) each neuron's activity
+    mean = jnp.mean(counts_valid, axis=1, keepdims=True)
+    std = jnp.std(counts_valid, axis=1, keepdims=True) + 1e-8
+    z_scored = (counts_valid - mean) / std
 
-    # Extract upper triangle (excluding diagonal)
-    mask = jnp.triu(jnp.ones_like(corr_matrix), k=1).astype(bool)
-    correlations = corr_matrix[mask]
+    # Correlation matrix = (Z @ Z.T) / n_bins
+    # Use efficient BLAS matrix multiplication
+    n_bins = counts_valid.shape[1]
+    corr_matrix = jnp.dot(z_scored, z_scored.T) / n_bins
 
-    # Average correlation
-    mean_corr = jnp.mean(correlations)
+    # Extract upper triangle efficiently (excluding diagonal)
+    # Sum upper triangle and divide by number of pairs
+    n_pairs = (n_valid * (n_valid - 1)) // 2
+    upper_sum = (jnp.sum(corr_matrix) - jnp.trace(corr_matrix)) / 2.0
+    mean_corr = upper_sum / (n_pairs + 1e-10)
 
     return mean_corr
 
@@ -133,6 +141,8 @@ def compute_statistics_summary(
     """
     Compute all single-neuron and pairwise statistics.
 
+    Optimized with fast JAX operations (no JIT due to dynamic shapes).
+
     Args:
         spike_counts: (n_neurons, n_bins)
         bin_size: Bin size (ms)
@@ -146,4 +156,4 @@ def compute_statistics_summary(
     rsc = compute_rsc(spike_counts, min_fr, bin_size)
     rsc_z = fisher_z_transform(rsc)
 
-    return {"fr": fr, "ff": ff, "rsc": rsc, "rsc_z": rsc_z}
+    return {"fr": float(fr), "ff": float(ff), "rsc": float(rsc), "rsc_z": float(rsc_z)}

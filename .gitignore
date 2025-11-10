@@ -3,3 +3,4 @@
 *.vscode
 *.ipynb_checkpoints
 
+snops_jax.egg-info/

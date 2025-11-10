@@ -23,8 +23,8 @@ class FAResult(NamedTuple):
 def fit_fa_em(
     data: chex.Array,
     n_factors: int,
-    max_iter: int = 100,
-    tol: float = 1e-4,
+    max_iter: int = 50,  # Reduced from 100 for speed
+    tol: float = 1e-3,  # Relaxed from 1e-4 for faster convergence
     rng_key: chex.PRNGKey = None,
 ) -> FAResult:
     """
@@ -205,6 +205,7 @@ def compute_shared_variance_stats(
     spike_counts: chex.Array,
     n_factors: int = None,
     dsh_threshold: float = 0.95,
+    use_cv: bool = False,
     rng_key: chex.PRNGKey = None,
 ) -> dict:
     """
@@ -212,8 +213,9 @@ def compute_shared_variance_stats(
 
     Args:
         spike_counts: (n_neurons, n_bins)
-        n_factors: Number of factors (if None, select via CV)
+        n_factors: Number of factors (if None, use heuristic or CV)
         dsh_threshold: Threshold for dimensionality of shared variance (default 0.95)
+        use_cv: If True and n_factors is None, use CV to select (slow but accurate)
         rng_key: Random key
 
     Returns:
@@ -223,16 +225,26 @@ def compute_shared_variance_stats(
         - eigenspectrum: Eigenvalues of LL^T
         - L: Loading matrix
         - Psi: Noise covariance
+        - n_factors: Number of factors used
     """
     if rng_key is None:
         rng_key = jax.random.PRNGKey(0)
 
     # Transpose to (n_bins, n_neurons) for FA
     data = spike_counts.T
+    n_bins, n_neurons = data.shape
 
     # Select number of factors if not specified
     if n_factors is None:
-        n_factors = select_n_factors_cv(data, max_factors=20, rng_key=rng_key)
+        if use_cv:
+            # Use expensive but accurate CV (for production runs)
+            max_factors = min(20, n_bins - 1, n_neurons - 1)
+            n_factors = select_n_factors_cv(data, max_factors=max_factors, rng_key=rng_key)
+        else:
+            # Use fast heuristic (for demos and quick tests)
+            # Heuristic: min(n_bins // 2, n_neurons // 10, 15)
+            n_factors = min(n_bins // 2, n_neurons // 10, 15)
+            n_factors = max(n_factors, 1)  # At least 1 factor
 
     # Fit FA
     result = fit_fa_em(data, n_factors, rng_key=rng_key)
