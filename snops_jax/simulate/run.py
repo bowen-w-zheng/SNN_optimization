@@ -77,25 +77,17 @@ def run_simulation(
     bin_steps = int(config.bin_size / config.dt)
     n_bins = (n_steps - n_burn) // bin_steps
 
-    # Pre-generate feedforward spikes for all timesteps
+    # Split RNG keys for each timestep (cheap operation)
     key_ff = jax.random.split(key_sim, n_steps)
 
-    @jax.jit
-    def generate_ff_spikes(key):
+    # Simulation step function for lax.scan (will be JIT-compiled by lax.scan)
+    def scan_fn(carry, key):
+        state, spike_bin_e, spike_bin_i, step_idx = carry
+
+        # Generate feedforward spikes on-the-fly (inside JIT!)
         key_e, key_i = jax.random.split(key)
         ff_e = sample_poisson_feedforward(n_ff, config.ff_rate, config.dt, key_e)
         ff_i = sample_poisson_feedforward(n_ff, config.ff_rate, config.dt, key_i)
-        return ff_e, ff_i
-
-    ff_spikes = jax.vmap(generate_ff_spikes)(key_ff)
-    ff_spikes_e_all = ff_spikes[0]  # (n_steps, n_ff)
-    ff_spikes_i_all = ff_spikes[1]
-
-    # Simulation step function for lax.scan
-    @jax.jit
-    def scan_fn(carry, inputs):
-        state, spike_bin_e, spike_bin_i, step_idx = carry
-        ff_e, ff_i = inputs
 
         # Step the network
         state_next = step_network(
@@ -130,11 +122,10 @@ def run_simulation(
     spike_bins_e = jnp.zeros((n_bins, n_e), dtype=jnp.float32)
     spike_bins_i = jnp.zeros((n_bins, n_i), dtype=jnp.float32)
 
-    # Run simulation
+    # Run simulation (pass RNG keys, not pre-generated spikes!)
     initial_carry = (initial_state, spike_bins_e, spike_bins_i, 0)
-    inputs = (ff_spikes_e_all, ff_spikes_i_all)
 
-    final_carry, outputs = jax.lax.scan(scan_fn, initial_carry, inputs)
+    final_carry, outputs = jax.lax.scan(scan_fn, initial_carry, key_ff)
     final_state, final_bins_e, final_bins_i, _ = final_carry
 
     # Transpose to (n_neurons, n_bins)
