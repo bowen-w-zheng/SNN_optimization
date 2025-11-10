@@ -1,0 +1,74 @@
+# Default configuration for Spatial Balanced Network (SBN)
+
+network:
+  type: "SBN"
+  n_e: 4500  # Number of excitatory neurons
+  n_i: 1125  # Number of inhibitory neurons
+  n_ff: 1000  # Number of feedforward inputs
+
+  # Spatial parameters
+  grid_size: 1.0  # Grid size (mm)
+  p_base: 0.2     # Base connection probability
+
+# Parameter ranges for optimization
+param_ranges:
+  tau_ed: [1.0, 25.0]      # E synaptic decay (ms)
+  tau_id: [1.0, 25.0]      # I synaptic decay (ms)
+  J_ee: [0.0, 150.0]       # E->E strength (mV)
+  J_ei: [-150.0, 0.0]      # I->E strength (mV)
+  J_ie: [0.0, 150.0]       # E->I strength (mV)
+  J_ii: [-150.0, 0.0]      # I->I strength (mV)
+  J_eF: [0.0, 150.0]       # FF->E strength (mV)
+  J_iF: [0.0, 150.0]       # FF->I strength (mV)
+
+  # Spatial widths (mm)
+  sigma_e: [0.0, 0.25]     # E connection width
+  sigma_i: [0.0, 0.25]     # I connection width
+  sigma_F: [0.0, 0.25]     # Feedforward width
+
+simulation:
+  dt: 0.05
+  integrator: "euler"
+  short_duration: 10000.0
+  full_duration: 140500.0
+  burn_in: 500.0
+  ff_rate: 10.0
+  bin_size: 200.0
+
+stats:
+  n_sample: 50
+  n_repeats: 10
+  min_fr: 0.5
+  dsh_threshold: 0.95
+  n_eigenspectrum: 50
+
+cost:
+  use_fr: true
+  use_ff: true
+  use_rsc: true
+  use_pct_sh: true
+  use_dsh: true
+  use_es: true
+  w_fr: 1.0
+  w_ff: 1.0
+  w_rsc: 1.0
+  w_pct_sh: 1.0
+  w_dsh: 1.0
+  w_es: 1.0
+
+bo:
+  n_init: 50
+  n_gp_restarts: 10
+  n_acq_restarts: 50
+  batch_size: 1
+  max_iterations: 200
+  cost_threshold: 0.01
+  max_reps: 5
+  sd_threshold: 0.15
+  potential_threshold: 1.0
+  min_fr: 1.0
+  max_ff: 5.0
+  min_dsh: 1.0
+  use_feasibility_gp: true
+  log_dir: "./snops_logs"
+  save_every: 10
