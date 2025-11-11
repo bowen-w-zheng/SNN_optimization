@@ -36,9 +36,9 @@ class SimulationOutput:
 
     spike_counts_e: chex.Array  # (n_e, n_bins) spike counts
     spike_counts_i: chex.Array  # (n_i, n_bins) spike counts
-    spike_times_e: chex.Array  # (n_steps,) list of spike times for E
-    spike_times_i: chex.Array  # (n_steps,) list of spike times for I
     final_state: SimulationState  # Final state
+    spike_times_e: chex.Array = None  # (n_steps, n_e) optional - LARGE!
+    spike_times_i: chex.Array = None  # (n_steps, n_i) optional - LARGE!
 
 
 def run_simulation(
@@ -50,6 +50,7 @@ def run_simulation(
     eif_params: EIFParams,
     syn_params: SynapticParams,
     rng_key: chex.PRNGKey,
+    return_spike_times: bool = False,
 ) -> SimulationOutput:
     """
     Run full simulation with spike binning.
@@ -63,6 +64,7 @@ def run_simulation(
         eif_params: EIF parameters
         syn_params: Synaptic parameters
         rng_key: JAX random key
+        return_spike_times: If True, return full spike time arrays (USES LOTS OF GPU MEMORY!)
 
     Returns:
         Simulation output with binned spike counts
@@ -132,15 +134,18 @@ def run_simulation(
     spike_counts_e = final_bins_e.T
     spike_counts_i = final_bins_i.T
 
-    # Extract spike times (optional, for detailed analysis)
-    spikes_e_all, spikes_i_all = outputs
+    # Extract spike times only if requested (they use a LOT of memory)
+    if return_spike_times:
+        spikes_e_all, spikes_i_all = outputs
+    else:
+        spikes_e_all, spikes_i_all = None, None
 
     return SimulationOutput(
         spike_counts_e=spike_counts_e,
         spike_counts_i=spike_counts_i,
-        spike_times_e=spikes_e_all,  # (n_steps, n_e)
-        spike_times_i=spikes_i_all,  # (n_steps, n_i)
         final_state=final_state,
+        spike_times_e=spikes_e_all,
+        spike_times_i=spikes_i_all,
     )
 
 
